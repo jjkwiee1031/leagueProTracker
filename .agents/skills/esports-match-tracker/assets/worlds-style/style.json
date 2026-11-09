@@ -1,0 +1,74 @@
+{
+  "name": "worlds-report-style",
+  "canvas": { "width": 1080, "height": 1920, "fps": 30 },
+  "color": {
+    "_note": "Runtime source of truth: remotion/src/theme.ts. This block documents the DEFAULT theme (gold); use useTheme() in components, never hardcoded hex.",
+    "defaultTheme": "gold",
+    "themes": {
+      "gold": { "label": "Championship Gold (default)", "bg": "#0a0705", "accent": "#f5b301", "accentBright": "#fde68a", "win": "#ffd75e", "loss": "#6f6558" },
+      "blue": { "label": "Esports Blue (legacy look)", "bg": "#030712", "accent": "#38bdf8", "accentBright": "#bae6fd", "win": "#4ade80", "loss": "#ef4444" },
+      "crimson": { "label": "Crimson", "bg": "#0a0507", "accent": "#ef4444", "accentBright": "#fecaca", "win": "#ff8a8a", "loss": "#6f5b5e" },
+      "emerald": { "label": "Emerald", "bg": "#04100c", "accent": "#10b981", "accentBright": "#a7f3d0", "win": "#34d399", "loss": "#5f726a" }
+    },
+    "bg": "#0a0705",
+    "bgGradient": "linear-gradient(180deg, #16110a 0%, #0a0705 100%)",
+    "bgRadial": "radial-gradient(circle at center, #2c2109 0%, #0a0705 100%)",
+    "cardBg": "rgba(30, 24, 13, 0.75)",
+    "cardBorder": "rgba(212, 175, 55, 0.18)",
+    "panelBorder": "rgba(212, 175, 55, 0.22)",
+    "accent": "#f5b301",
+    "accentSoftBg": "rgba(245, 179, 1, 0.12)",
+    "accentSoftBorder": "rgba(245, 179, 1, 0.35)",
+    "accentGlow": "rgba(245, 179, 1, 0.55)",
+    "win": "#f5b301",
+    "victory": "#ffd75e",
+    "defeat": "#6f6558",
+    "textPrimary": "#fdfaf3",
+    "textBody": "#f0e9db",
+    "textMuted": "#a89c8a",
+    "textDim": "#6f6558",
+    "divider": "rgba(245, 179, 1, 0.12)",
+    "titleGradient": "linear-gradient(135deg, #fffaef 0%, #f5b301 55%, #d97706 100%)",
+    "chipBg": "rgba(45, 36, 20, 0.85)",
+    "chipBorder": "rgba(245, 179, 1, 0.18)",
+    "captionBg": "rgba(8, 6, 3, 0.78)",
+    "captionBorder": "rgba(245, 179, 1, 0.18)"
+  },
+  "typography": {
+    "fontFamily": "system-ui, -apple-system, sans-serif",
+    "weights": { "regular": 600, "bold": 700, "black": 800, "heavy": 900 },
+    "size": {
+      "openerLabel": 32,
+      "openerTitle": 72,
+      "openerPill": 28,
+      "outroTitle": 68,
+      "badge": 22,
+      "matchMeta": 20,
+      "team": 54,
+      "score": 66,
+      "duration": 22,
+      "resultTag": 18,
+      "sectionLabel": 18,
+      "caption": 32
+    }
+  },
+  "radius": { "card": 24, "badge": 8, "pill": 9999, "image": 14, "caption": 16, "chip": 6 },
+  "motion": {
+    "enterSpring": { "damping": 14, "mass": 0.8 },
+    "titleSpring": { "damping": 12 },
+    "captionFadeFrames": 5,
+    "openerSubtitleFade": [15, 30]
+  },
+  "layout": {
+    "pagePaddingX": 50,
+    "cardMaxWidth": 960,
+    "cardPadding": "28px 30px 30px",
+    "imageMaxWidth": 900,
+    "captionBottom": 120
+  },
+  "timing": {
+    "model": "tts-cue-driven",
+    "note": "Cards follow narration cue boundaries (kind=match); opener runs to the first match cue, outro starts at the outro cue. Duration = max(cards, narrationFrames).",
+    "fallback": { "openerFrames": 90, "cardFrames": 190 }
+  }
+}

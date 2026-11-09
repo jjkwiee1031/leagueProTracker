@@ -1,0 +1,25 @@
+# Secrets
+leagueProDB/.env
+auth.json
+.env
+
+# Node
+node_modules/
+
+# Nested repos / vendored toolchains (own git history / huge)
+remotion/
+yt-dlp/
+
+# Pipeline outputs
+output/
+remotion/public/worlds/
+remotion/out/
+
+# Browser session state
+.playwright-profile/
+.playwright/
+.playwright-cli/
+
+# OS / editor
+.DS_Store
+*.log
