@@ -70,9 +70,24 @@ PK (game_id, player_id). A player may change teams/roles/champions between games
 | transcript_id | bigint identity | PK |
 | game_id | bigint | FK → games (CASCADE) |
 | transcript | text | NOT NULL — raw output of transcription |
-| summary | text | nullable — AI-generated game summary |
 
-UNIQUE (game_id) — one transcript per game.
+UNIQUE (game_id) — one transcript per game. (`summary` dropped — summaries no longer generated.)
+
+### transcript_chunks — pgvector semantic search over transcripts
+| col | type | notes |
+|---|---|---|
+| chunk_id | bigint identity | PK |
+| game_id | bigint | FK → games (CASCADE) |
+| chunk_index | smallint | ≥ 0; UNIQUE per (game_id, chunk_index) |
+| content | text | NOT NULL — chunk text (consecutive SRT cues merged into ~45 s windows, ≤1200 chars) |
+| start_sec / end_sec | numeric | nullable — video-time bounds from the SRT cues |
+| embedding | vector(1536) | NOT NULL — `openai/text-embedding-3-small` via OpenRouter; dim fixed at table creation |
+
+HNSW index on `embedding vector_cosine_ops`; index on `game_id`. Search via RPC
+`match_transcript_chunks(query_embedding, match_teams, match_date, game_number, match_count)`
+(cosine `<=>` KNN with optional team/date/game filters). Maintained by
+`scripts/db_transcript_embed.mjs` (ingest, idempotent per game) and queried by
+`scripts/db_semantic_search.mjs`.
 
 ## Canonical query (AI pipeline)
 ```sql
@@ -90,5 +105,5 @@ order by g.game_number,
 - RLS enabled on all tables, no policies (pipeline uses service role / direct SQL; not exposed to anon).
 - All deletes: `restrict` except matches cascade → games, games cascade → game_players + transcripts.
 - Indexes on all FK columns + `matches.match_date`.
-- Migration: `supabase/migrations/20260215000000_initial_schema.sql` + `20260216000000_transcripts_per_game.sql` (transcripts moved from match-level to game-level; `summary` added).
+- Migration: `supabase/migrations/20260215000000_initial_schema.sql` + `20260216000000_transcripts_per_game.sql` (transcripts moved from match-level to game-level) + `20260217000000_transcript_vectors.sql` (pgvector: `transcript_chunks` + `match_transcript_chunks` RPC; `summary` column dropped).
 - Scraped data maps 1:1: match-level `round/bestOf/scoreA/scoreB/winner/duration` → `matches`; `games[]` → `games`; per-game `players[{role,name,champion}]` → `game_players`.

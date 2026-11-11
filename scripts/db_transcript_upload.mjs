@@ -1,8 +1,8 @@
-// Uploads a video transcript (+ summary) to the leagueProDB `transcripts` table,
+// Uploads a video transcript to the leagueProDB `transcripts` table,
 // resolved by matchup (team abbreviations) + date + game number.
 // Usage:
 //   node scripts/db_transcript_upload.mjs output/mp3/<id>.srt --teams HLE,BLG \
-//     --date 2026-11-08 [--game 2] [--summary output/data/<DATE>/HLE_vs_BLG_g2.summary.md]
+//     --date 2026-11-08 [--game 2]
 // Env: SUPABASE_URL + SUPABASE_KEY/SUPABASE_SECRET_KEY (leagueProDB/.env works).
 import fs from 'fs';
 import path from 'path';
@@ -24,13 +24,12 @@ function parseArgs(argv) {
     if (a === '--teams') args.teams = argv[++i].split(',').map((t) => t.trim().toUpperCase());
     else if (a === '--date') args.date = argv[++i];
     else if (a === '--game') args.game = Number(argv[++i]);
-    else if (a === '--summary') args.summary = argv[++i];
     else args._.push(a);
   }
   return args;
 }
 
-export async function uploadTranscriptToDb({ transcript, summary = null, tokens = [], date, game = null } = {}) {
+export async function uploadTranscriptToDb({ transcript, tokens = [], date, game = null } = {}) {
   const db = supabaseRestClient();
   if (!db) {
     throw new Error('Missing SUPABASE_URL / SUPABASE_KEY (leagueProDB/.env or env)');
@@ -76,7 +75,7 @@ export async function uploadTranscriptToDb({ transcript, summary = null, tokens 
 
   // 3. upsert transcript (one row per game via unique game_id)
   const [row] = await rest('POST', 'transcripts?on_conflict=game_id',
-    { game_id: gameId, transcript, summary },
+    { game_id: gameId, transcript },
     'resolution=merge-duplicates,return=representation');
   return {
     matchId: match.match_id,
@@ -92,13 +91,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(import.met
   const args = parseArgs(process.argv.slice(2));
   const [srtPath] = args._;
   if (!srtPath || !args.teams) {
-    console.error('Usage: node scripts/db_transcript_upload.mjs <srt> --teams HLE,BLG --date YYYY-MM-DD [--game N] [--summary summary.md]');
+    console.error('Usage: node scripts/db_transcript_upload.mjs <srt> --teams HLE,BLG --date YYYY-MM-DD [--game N]');
     process.exit(1);
   }
   const transcript = fs.readFileSync(srtPath, 'utf-8');
-  const summary = args.summary && fs.existsSync(args.summary) ? fs.readFileSync(args.summary, 'utf-8') : null;
   const res = await uploadTranscriptToDb({
-    transcript, summary, tokens: args.teams, date: args.date, game: args.game ?? null,
+    transcript, tokens: args.teams, date: args.date, game: args.game ?? null,
   });
   console.log(`Uploaded → transcripts.transcript_id=${res.transcriptId} (game_id=${res.gameId}, ${res.matchup} ${res.date})`);
 }

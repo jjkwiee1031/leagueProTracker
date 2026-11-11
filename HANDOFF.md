@@ -1,6 +1,6 @@
-# Handoff notes — refactor + vector DB plan
+# Handoff notes — refactor + vector DB (English full-VOD transcripts)
 
-Read this if you come back after a break. Covers: what the refactor changed, how to publish to GitHub, and the plan for adding vector (semantic) search on Supabase.
+Read this if you come back after a break. Covers: what the refactor changed, how to publish to GitHub, and the vector-search pipeline for full-match English commentary transcripts.
 
 ## 1. What the refactor changed (commit `1d97b13`)
 
@@ -33,57 +33,23 @@ Already excluded (`.gitignore`) — do NOT force-add these:
 - `yt-dlp/` — 6.8 GB vendored toolchain (yt-dlp source + Whisper venv)
 - `remotion/` — has its **own git history**. Either publish it as a second repo, or convert to a submodule: `git rm -r --cached . 2>/dev/null; git submodule add <remotion-repo-url> remotion`
 
-## 3. Next: vector database (pgvector on Supabase)
+## 3. Vector DB (pgvector on Supabase) — implemented for English full-VOD transcripts
 
-Goal: semantic search over game transcripts/summaries — e.g. "find games where casters discussed an early dragon soul fight" → matched game + transcript excerpts, usable for grounding summaries and future RAG.
+Pipeline changed (2026-02-17): skill `lol-pro-video-transcript` now targets FULL pro-match VODs with English commentary (not 10-min Chinese clips). No summaries are generated anymore (`scripts/summarize_video_transcript.mjs` deleted; `generate_summary.mjs` kept for the Worlds-report pipeline).
 
-### Design (fits the existing schema)
+### What exists
+- Migration `leagueProDB/supabase/migrations/20260217000000_transcript_vectors.sql`:
+  - `vector` extension; table `transcript_chunks` (game_id FK, chunk_index, content, start_sec/end_sec, embedding vector(1536), UNIQUE(game_id, chunk_index)); HNSW cosine index; RLS on, no policies.
+  - RPC `match_transcript_chunks(query_embedding, match_teams, match_date, game_number, match_count)` — cosine `<=>` KNN with optional team/date/game filters.
+  - `transcripts.summary` dropped.
+- `scripts/lib/embeddings.mjs` — OpenRouter embeddings client (model `openai/text-embedding-3-small`, 1536 dims), env `EMBEDDING_API_KEY`/`OPENROUTER_API_KEY` (leagueProDB/.env works).
+- `scripts/db_transcript_embed.mjs` — SRT → ~45 s time-window chunks (≤1200 chars, timestamps preserved) → transcripts upsert + chunks replace per game. `--dry-run` to preview. Idempotent.
+- `scripts/db_transcript_upload.mjs` — summary support removed; uploads full transcript only.
+- `scripts/db_semantic_search.mjs` — embed query → RPC → print matches with video timestamps. `--teams/--date/--game/--limit/--full`.
+- 2026-11-10 audit fixes: removed unused `CHUNK_SELECT` in `db_semantic_search.mjs`; `storeChunks` in `db_transcript_embed.mjs` now embeds all batches **before** deleting old chunks (a mid-batch API failure can no longer leave a game half-stored).
 
-- Enable `vector` extension (Dashboard → Database → Extensions, or in the migration).
-- New table `transcript_chunks`: one row per ~500-1000-char chunk of a transcript.
-  - `chunk_id` bigint identity PK
-  - `game_id` bigint NOT NULL FK → games (CASCADE)
-  - `chunk_index` smallint NOT NULL — order within the transcript
-  - `content` text NOT NULL — chunk text
-  - `start_sec` / `end_sec` numeric NULL — timestamps from the SRT, so hits can be linked back to video moments
-  - `embedding` vector(1536) NOT NULL — `text-embedding-3-small` (OpenAI, 1536 dims). Alternatives: 3072 (`text-embedding-3-large`) or a local model's dim — **pick before creating the index, dim is fixed**.
-  - `summary_embedding` stays on `transcripts` (one vector per game) if game-level search is wanted: `alter table transcripts add column embedding vector(1536)`.
-  - UNIQUE (game_id, chunk_index); index on FK `game_id`.
-- Index: **HNSW** (`using hnsw (embedding vector_cosine_ops)`) — better recall/latency than IVFFlat at this scale and needs no training rows. Halfvec (pgvector 0.7+) could halve storage if needed later.
-- RLS: enabled, no policies (pipeline uses service role — consistent with every other table).
-- Embedding client: new `scripts/lib/embeddings.mjs` (OpenAI API via `EMBEDDING_API_KEY` / `OPENAI_API_KEY` in `leagueProDB/.env`), used by a `scripts/db_transcript_embed.mjs` that chunks SRTs and upserts chunks idempotently on (game_id, chunk_index).
-- Query path: `scripts/db_semantic_search.mjs` — embed query, `select ... order by embedding <=> $query_vector limit k` joined to `games`/`matches` for team/date filters.
-
-### Draft migration — `leagueProDB/supabase/migrations/20260217000000_transcript_vectors.sql`
-
-```sql
-create extension if not exists vector;
-
-create table transcript_chunks (
-  chunk_id    bigint generated always as identity primary key,
-  game_id     bigint not null references games (game_id) on delete cascade,
-  chunk_index smallint not null check (chunk_index >= 0),
-  content     text not null,
-  start_sec   numeric,
-  end_sec     numeric,
-  embedding   vector(1536) not null,
-  unique (game_id, chunk_index)
-);
-create index transcript_chunks_game_id_idx on transcript_chunks (game_id);
-create index transcript_chunks_embedding_idx
-  on transcript_chunks using hnsw (embedding vector_cosine_ops);
-
-alter table transcript_chunks enable row level security;
-
-alter table transcripts add column embedding vector(1536);
-create index transcripts_embedding_idx on transcripts using hnsw (embedding vector_cosine_ops);
-```
-
-### Steps when implementing
-1. Read `leagueProDB/DATABASE.md` + load the `supabase` and `supabase-postgres-best-practices` skills (project rule for any Postgres work).
-2. Apply the migration (Supabase MCP or `supabase db push`).
-3. Write `scripts/lib/embeddings.mjs` + `scripts/db_transcript_embed.mjs`; backfill existing `transcripts` rows.
-4. Write `scripts/db_semantic_search.mjs`; smoke-test with a Chinese query against a known game.
-5. Update `DATABASE.md` (ERD + tables) and the `lol-pro-video-transcript` skill (new optional embed/search step after Step 4).
-
-Open decisions before writing code: embedding model/dim (OpenAI vs local), chunk size (500-1000 chars ≈ safe default for Mandarin transcripts), whether to chunk the `summary` too, and whether search results should filter by team/date metadata in SQL (recommended) or purely by cosine.
+### Remaining steps
+- DONE (2026-11-10): migration applied via MCP (name `transcript_vectors`); `service_role` granted DML on `transcript_chunks` + execute on the RPC (new tables don't auto-grant). First ingest: `Mc5forNfXDQ.srt` → game_id=65 (BLG vs T1 2026-11-09 g1), 50 chunks; `db_semantic_search.mjs` smoke-tested OK. Note: migration uses `extensions.vector` + `set search_path = public, extensions` (Supabase keeps pgvector in `extensions`).
+1. ~~Apply the migration~~ ✅
+2. ~~Add EMBEDDING_API_KEY~~ ✅ (in `leagueProDB/.env`)
+3. Backfill other local SRTs when needed.
