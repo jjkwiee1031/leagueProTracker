@@ -6,11 +6,11 @@
 
 **Text-to-SQL semantic search over the transcript database** (retrieving match commentary info from Supabase):
 
-https://raw.githubusercontent.com/jjkwiee1031/leagueProTracker/main/demo/demo1.mp4
+https://raw.githubusercontent.com/jjkwiee1031/leagueProTracker/master/demo/demo1.mp4
 
 **Rendered Worlds daily report video** (2026-11-15):
 
-https://raw.githubusercontent.com/jjkwiee1031/leagueProTracker/main/demo/2026-11-15_worlds_report.mp4
+https://raw.githubusercontent.com/jjkwiee1031/leagueProTracker/master/demo/2026-11-15_worlds_report.mp4
 
 ## Overview
 
