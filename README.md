@@ -6,11 +6,11 @@
 
 **Text-to-SQL semantic search over the transcript database** (retrieving match commentary info from Supabase):
 
-demo/demo1.mp4
+[▶️ demo1.mp4](demo/demo1.mp4)
 
 **Rendered Worlds daily report video** (2026-11-15):
 
-demo/2026-11-15_worlds_report.mp4
+[▶️ 2026-11-15_worlds_report.mp4](demo/2026-11-15_worlds_report.mp4)
 
 ## Overview
 
