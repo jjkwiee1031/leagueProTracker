@@ -6,7 +6,7 @@
 
 **Text-to-SQL semantic search over the transcript database** (retrieving match commentary info from Supabase):
 
-https://github.com/user-attachments/assets/82c4cba2-f142-465b-ad45-be6e18b63fdf
+https://github.com/user-attachments/assets/987703e2-b21a-4b53-bbb1-122d2e580b73
 
 **RAG + vector semantic search over match transcripts** — a natural-language query is embedded and matched against transcript chunks in pgvector, returning ranked commentary with video timestamps:
 
