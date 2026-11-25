@@ -6,11 +6,11 @@
 
 **Text-to-SQL semantic search over the transcript database** (retrieving match commentary info from Supabase):
 
-<video src="demo/demo1.mp4" controls width="640"></video>
+https://github.com/user-attachments/assets/83fc72e9-bb84-4969-9074-f4f56576e362
 
 **Rendered Worlds daily report video** (2026-11-15):
 
-<video src="demo/2026-11-15_worlds_report.mp4" controls width="360"></video>
+https://github.com/user-attachments/assets/01e71f24-4f26-44a1-8bdf-d2ce526958df
 
 ## Overview
 
