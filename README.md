@@ -1,5 +1,3 @@
-
-https://github.com/user-attachments/assets/1a55622c-5bcd-42b1-bcf9-027785a83f0d
 # leagueProTracker
 
 **LoL esports → AI-narrated video + transcript vector search.** A three-pipeline toolkit that scrapes professional League of Legends match data, generates LLM-written Mandarin narration, renders it as a vertical Remotion video, and turns full-match commentary VODs into a pgvector-backed semantic search database.
