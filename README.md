@@ -2,6 +2,16 @@
 
 **LoL esports → AI-narrated video + transcript vector search.** A three-pipeline toolkit that scrapes professional League of Legends match data, generates LLM-written Mandarin narration, renders it as a vertical Remotion video, and turns full-match commentary VODs into a pgvector-backed semantic search database.
 
+## Demo
+
+**Text-to-SQL semantic search over the transcript database** (retrieving match commentary info from Supabase):
+
+https://raw.githubusercontent.com/jjkwiee1031/leagueProTracker/main/demo/demo1.mp4
+
+**Rendered Worlds daily report video** (2026-11-15):
+
+https://raw.githubusercontent.com/jjkwiee1031/leagueProTracker/main/demo/2026-11-15_worlds_report.mp4
+
 ## Overview
 
 Following a professional LoL tournament day-by-day means re-reading Liquipedia match pages and writing the same recap over and over. This project automates that:
