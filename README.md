@@ -6,8 +6,11 @@
 
 **Text-to-SQL semantic search over the transcript database** (retrieving match commentary info from Supabase):
 
-
 https://github.com/user-attachments/assets/82c4cba2-f142-465b-ad45-be6e18b63fdf
+
+**RAG + vector semantic search over match transcripts** — a natural-language query is embedded and matched against transcript chunks in pgvector, returning ranked commentary with video timestamps:
+
+![RAG + vector semantic search over match transcripts](demo/sementicSearch.jpg)
 
 **Rendered Worlds daily report video** (2026-11-15):
 
