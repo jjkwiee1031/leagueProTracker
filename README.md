@@ -20,15 +20,6 @@ https://github.com/user-attachments/assets/987703e2-b21a-4b53-bbb1-122d2e580b73
 
 https://github.com/user-attachments/assets/01e71f24-4f26-44a1-8bdf-d2ce526958df
 
-## Overview
-
-Following a professional LoL tournament day-by-day means re-reading Liquipedia match pages and writing the same recap over and over. This project automates that:
-
-1. **Worlds daily report video** — scrape a day's matches → ingest into Supabase → LLM writes Mandarin narration → edge-tts synthesizes audio + subtitles → Remotion renders a vertical video.
-   Entry point: `scripts/run_pipeline.sh <YYYY-MM-DD> "<tournament>"`.
-2. **Full-VOD transcripts → RAG semantic search** — download a pro-match VOD's audio (yt-dlp) → transcribe locally with Whisper → chunk into time windows → embed with `text-embedding-3-small` into a pgvector database (HNSW cosine index, KNN RPC with metadata filters) → retrieval-augmented semantic search over the commentary, with results mapped back to video timestamps. The Supabase schema powering both pipelines lives in `leagueProDB/` (see `leagueProDB/DATABASE.md`).
-
-The interesting AI engineering problem is the **narration↔video contract**: the LLM must return JSON whose line counts exactly match the video's match cards, and edge-tts emits exactly one subtitle cue per line — so the pipeline validates the LLM output against the contract and fails loudly instead of rendering a broken video. There is a deterministic `--template` fallback for offline reproduction.
 
 ## Key Features
 
