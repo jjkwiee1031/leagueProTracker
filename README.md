@@ -1,18 +1,22 @@
 # leagueProTracker
 
-**LoL esports → AI-narrated video + transcript vector search.** A three-pipeline toolkit that scrapes professional League of Legends match data, generates LLM-written Mandarin narration, renders it as a vertical Remotion video, and turns full-match commentary VODs into a pgvector-backed semantic search database.
+**LoL esports → AI-narrated video + transcript vector search.** A three-pipeline toolkit for professional League of Legends:
+
+1. **Match data scraping & ingestion** — scrapes Liquipedia match pages (Playwright) and ingests matches, teams, players, and per-game stats into Supabase.
+2. **Worlds daily report video** — generates LLM-written Mandarin narration from the DB data, synthesizes audio + subtitles with edge-tts, and renders a vertical Remotion video.
+3. **Transcript vector search (RAG)** — turns full-match commentary VODs into Whisper transcripts, embeds time-window chunks into pgvector, and serves retrieval-augmented semantic search mapped back to video timestamps.
 
 ## Demo
 
-**Text-to-SQL semantic search over the transcript database** (retrieving match commentary info from Supabase):
+**Text-to-SQL semantic search over the transcript database**:
 
 https://github.com/user-attachments/assets/987703e2-b21a-4b53-bbb1-122d2e580b73
 
-**RAG + vector semantic search over match transcripts** — a natural-language query is embedded and matched against transcript chunks in pgvector, returning ranked commentary with video timestamps:
+**RAG + vector semantic search over match transcripts**:
 
 ![RAG + vector semantic search over match transcripts](demo/sementicSearch.jpg)
 
-**Rendered Worlds daily report video** (2026-11-15):
+**Rendered Worlds daily report video**:
 
 https://github.com/user-attachments/assets/01e71f24-4f26-44a1-8bdf-d2ce526958df
 
@@ -29,12 +33,10 @@ The interesting AI engineering problem is the **narration↔video contract**: th
 ## Key Features
 
 - **Playwright scraper** for Liquipedia match-detail pages: per-game durations, winners, rosters, and player-performance screenshots; persistent browser profile to survive Cloudflare Turnstile (re-run with `--headed` to clear the CAPTCHA once).
-- **Contract-validated LLM narration** — JSON schema checks (intro / one line per match / recap / outro), single-line texts, retry loop that feeds validation errors back to the model, no silent fallback.
 - **Grounded summarization** — narration is generated from DB match data, so player names/teams/results come from the database rather than the model's memory.
 - **pgvector semantic search** — SRT → ~45 s time-window chunks (≤1200 chars, timestamps preserved) → `text-embedding-3-small` embeddings → HNSW cosine index → RPC KNN query with optional team/date/game filters, results mapped back to video timestamps.
 - **Idempotent DB ingestion** — `UNIQUE(game_id, chunk_index)` with replace-per-game; embedding batches are completed *before* old chunks are deleted, so a mid-batch API failure can't leave a game half-stored.
 - **Automated video rendering** — Remotion composition zips TTS audio cues to subtitle cues 1:1 and renders match cards from scraped data.
-- **Orchestrated pipeline runner** — staged bash runner with per-stage timing, logs, `--dry-run` / `--skip-*` / `--stop-after-db` flags.
 
 ## Architecture
 
